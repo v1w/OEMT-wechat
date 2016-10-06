@@ -1,12 +1,13 @@
-import time
+import datetime
 import requests
 import json
 import traceback
+from bs4 import BeautifulSoup
 
 HELP_MSG = \
 """Usage:
-    sem <stats>
-    coater <stats>"""
+    sem <free> <now>
+    coater <now>"""
 
 OEMT_HOST = 'http://127.0.0.1:11934'
 
@@ -25,15 +26,16 @@ def handle_content(content):
             if args[0].lower() == 'help':
                 return HELP_MSG
         elif len(args) == 2:
-            if args[1].lower() == 'stats':
+            if args[1].lower() == 'now':
                 return get_status(args[0].lower())
-            elif args[1].lower() in ['d0', 'd1', 'd2']:
+            elif args[1].lower() == 'free':
                 return get_reserve_status(args[0].lower(), args[1].lower())
 
         return SYNTAX_ERR_MSG
 
     except Exception as e:
         print(e)
+        traceback.print_exc()
         return "Internal Error"
 
 
@@ -57,7 +59,34 @@ def get_reserve_status(equipment, day):
     }
 
     resp_raw = requests.post(OEMT_HOST + '/Equipment/AppointmentTimesContainer', data=post_data, timeout=4)
-    with open('reserve.txt','w') as f:
-        f.write(resp_raw.text)
-    return "Success"
+    resrv_data = BeautifulSoup(resp_raw.text, "lxml").find(id="tbAppointmentTimes")
+    #cur_date = str(datetime.date.today())
+    #d1_date = str(datetime.date.today() + datetime.timedelta(days=1))
+    #d2_date = str(datetime.date.today() + datetime.timedelta(days=2))
+    #cur_day = str(datetime.date.today().weekday())
+    free_periods = [item['title'] for item in resrv_data.find_all('td', 'valid')]
+    free_periods.sort(key=lambda x:x[-2], reverse=True)
+    tmp = []
+
+    finished = False
+    while not finished:
+        for i in range(0, len(free_periods)-1):
+            if (free_periods[i].split('-')[1]).split('(')[0] == free_periods[i+1].split('-')[0] and \
+                (free_periods[i].split('-')[1]).split('(')[1] == (free_periods[i+1].split('-')[1]).split('(')[1]:
+                free_periods[i+1] = '-'.join([free_periods[i].split('-')[0], free_periods[i+1].split('-')[1]])
+                free_periods.pop(i)
+                break
+
+        unfinished_count = 0
+        for i in range(0, len(free_periods)-1):
+            if (free_periods[i].split('-')[1]).split('(')[0] == free_periods[i+1].split('-')[0] and \
+                (free_periods[i].split('-')[1]).split('(')[1] == (free_periods[i+1].split('-')[1]).split('(')[1]:
+                unfinished_count += 1
+        if unfinished_count == 0:
+            finished = True
+
+
+    return '\n'.join(free_periods)
+
+    
 
