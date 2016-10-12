@@ -6,14 +6,41 @@ from bs4 import BeautifulSoup
 import re
 
 HELP_MSG = \
-"""命令格式:
-    sem [free] [now]
-    coater [now]
-    bind <username> <password>"""
+"""可用命令:
+[1] 获取仪器名列表:
+    list
+
+[2] 查询仪器状态:
+    <仪器名称> now
+    例: 
+    sem now
+
+[3] 查询可约时间:
+    <仪器名称> free
+    例: 
+    sem free
+
+[4] 绑定预约系统账号:
+    bind <用户名> <密码>
+    例: 
+    bind OEMT passwd
+
+[5] 机时预约(需绑定):
+    <仪器名称> res <预约日期> <开始时间> <预约时长> -c <附加信息>
+    预约日期说明:
+        预约本日填0; 
+        预约明日填1; 
+        预约后日填2.
+    例: 
+    sem res 1 14:00 1.5 -c FIB
+(预约明天下午2点SEM，时长1.5小时，需要FIB)
+
+[6] 显示帮助:
+    help"""
 
 OEMT_HOST = 'http://127.0.0.1:11934'
 
-SYNTAX_ERR_MSG = "无法识别┑(￣Д ￣)┍\n    输入[help]来查看可用命令"
+SYNTAX_ERR_MSG = "无法识别┑(￣Д ￣)┍\n    输入\"help\"来查看可用命令"
 
 EQUIP_ID = {
     'sem': '536e62ab-364f-478b-bf33-1e9015843ee6',
@@ -45,8 +72,10 @@ def handle_content(msg):
         if len(args) == 1:
             if args[0].lower() == 'help':
                 return HELP_MSG
-            if args[0].lower() == 'debug':
-                return reserve_equip(fromuser, 'sem', 1, 2)
+            if args[0].lower() == 'list':
+                return list_equip()
+            #if args[0].lower() == 'debug':
+            #    return reserve_equip(fromuser, 'sem', 1, 2)
         elif len(args) == 2:
             if args[1].lower() == 'now':
                 return get_status(args[0].lower())
@@ -55,9 +84,9 @@ def handle_content(msg):
         elif len(args) == 3:
             if args[0].lower() == 'bind':
                 return bind_user(fromuser, args[1], args[2])
-        elif len(args) == 10:
+        elif len(args) == 7:
             if args[1] == 'res':
-                return reserve_equip(fromuser, args[0].lower(), int(args[3]), args[5], float(args[7]), args[9])
+                return reserve_equip(fromuser, args[0].lower(), int(args[2]), args[3], float(args[4]), args[6])
 
         return SYNTAX_ERR_MSG
 
@@ -207,8 +236,8 @@ def reserve_equip(openid, equipment, date, t_start, duration, comment):
         return MAINTAINENCE_MSG
 
     
-
-
+def list_equip():
+    return '仪器列表:\n' + '\n'.join(EQUIP_ID.keys())
 
     
 

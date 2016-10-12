@@ -24,7 +24,7 @@ def wx():
         elif isinstance(recMsg, receive.Msg) and recMsg.MsgType == 'event':
             toUser = recMsg.FromUserName
             fromUser = recMsg.ToUserName
-            send_content = "欢迎您，新用户！\n目前支持的功能：查询SEM当前使用状态或可预约时间段\n开发中：SEM预约\n为方便查找，请置顶本公众号\n" + handle.HELP_MSG
+            send_content = "欢迎您，新用户！\n为方便查找，如果您不嫌麻烦的话，可置顶本公众号(。・`ω´・)\n\n使用方法:\n直接在对话框中输入命令\n\n" + handle.HELP_MSG + "\n\n(μ'sic forever!"
             replyMsg = reply.TextMsg(toUser, fromUser, send_content)
             return replyMsg.send()
         else:
