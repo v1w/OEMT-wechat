@@ -7,6 +7,10 @@ import traceback
 app = Flask(__name__)
 
 @app.route('/wx', methods=['POST','GET'])
+
+WELCOME_MSG = "欢迎您，新用户！\n为方便查找，如果您不嫌麻烦的话，可置顶本公众号(。・`ω´・)\n\n使用方法:\n直接在对话框中输入命令\n\n" \
+                + handle.HELP_MSG + "\n\n(μ'sic forever!"
+                
 def wx():
     if request.method == 'GET':
         return "Not Allowed"
@@ -24,7 +28,7 @@ def wx():
         elif isinstance(recMsg, receive.Msg) and recMsg.MsgType == 'event':
             toUser = recMsg.FromUserName
             fromUser = recMsg.ToUserName
-            send_content = "欢迎您，新用户！\n为方便查找，如果您不嫌麻烦的话，可置顶本公众号(。・`ω´・)\n\n使用方法:\n直接在对话框中输入命令\n\n" + handle.HELP_MSG + "\n\n(μ'sic forever!"
+            send_content = WELCOME_MSG
             replyMsg = reply.TextMsg(toUser, fromUser, send_content)
             return replyMsg.send()
         else:
